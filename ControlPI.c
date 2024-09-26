@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <pthread.h>
 #include <math.h>
+#include <unistd.h>
 
 FILE *hfiletxt;
 float planta(float Rk);
@@ -23,7 +24,7 @@ void* control_pi_thread(void* arg) {
         sensor = salida_proceso;
         u = algoritmo_pi(valor_sp, sensor);
         pthread_mutex_unlock(&mutex);
-        usleep(T * 1000); // Espera T milisegundos
+        usleep((int)(T * 1000)); // Espera T milisegundos
     }
     return NULL;
 }
@@ -34,7 +35,7 @@ void* dinamica_proceso_thread(void* arg) {
         salida_proceso = planta(u);
         respuestaLC[t] = salida_proceso;
         pthread_mutex_unlock(&mutex);
-        usleep(T * 1000); // Espera T milisegundos
+        usleep((int)(T * 1000)); // Espera T milisegundos
     }
     return NULL;
 }
@@ -44,7 +45,10 @@ int main() {
     pthread_mutex_init(&mutex, NULL);
 
     printf("Ingrese un valor de SP -->");
-    scanf("%f", &SP);
+    if (scanf("%f", &SP) != 1) {
+        printf("Error: Entrada no válida\n");
+        return -1; // Salida temprana si no es válido
+    }
 
     pthread_create(&thread1, NULL, control_pi_thread, NULL);
     pthread_create(&thread2, NULL, dinamica_proceso_thread, NULL);
@@ -52,17 +56,17 @@ int main() {
     pthread_join(thread1, NULL);
     pthread_join(thread2, NULL);
 
-    hfiletxt = fopen("c:\\resultado.txt", "wb+");
+    hfiletxt = fopen("resultado.txt", "wb+");
     if (hfiletxt != NULL) {
         for (int n = 0; n < puntos; n++)
-            fprintf(hfiletxt, "%lf ", respuestaLC[n]);
+            fprintf(hfiletxt, "%0.6f ", respuestaLC[n]);
         fclose(hfiletxt);
     }
 
     pthread_mutex_destroy(&mutex);
 
     // Llamar a gnuplot para graficar los resultados
-    system("gnuplot -e \"plot 'c:\\resultado.txt' with lines\"");
+    system("gnuplot -e \"plot 'resultado.txt' with lines; pause -1\"");
 
     return 0;
 }

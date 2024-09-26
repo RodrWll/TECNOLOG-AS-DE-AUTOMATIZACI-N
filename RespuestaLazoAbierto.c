@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <dos.h>
 #include <math.h>
 
 FILE *hfiletxt;
@@ -26,7 +25,7 @@ void main(void) {
     }
 
     //--------------------escribir archivo--------------------
-    hfiletxt = fopen((char*)("c:\\resultado.txt"), "wb+");
+    hfiletxt = fopen((char*)("resultado.txt"), "wb+");
     if (hfiletxt != NULL) {
         for (n = 0; n < puntos; n++)
             fprintf(hfiletxt, "%lf ", respuestaLA[n]);
